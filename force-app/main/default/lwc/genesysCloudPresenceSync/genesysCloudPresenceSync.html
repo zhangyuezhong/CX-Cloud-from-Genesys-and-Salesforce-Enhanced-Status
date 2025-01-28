@@ -1,0 +1,205 @@
+<template>
+  <template if:true={isSimpleView}>
+    <lightning-card title="Presence Management">
+      <lightning-input
+        type="toggle"
+        label="Options Mode"
+        name="option"
+        checked={isSimpleView}
+        onchange={switchOptionViewHandler}
+        message-toggle-active="Simple"
+        message-toggle-inactive="Advance"
+        slot="actions"
+      ></lightning-input>
+      <div class="slds-p-around_medium">
+        <template if:true={showProgressBar}>
+          <lightning-progress-bar value={progress}> </lightning-progress-bar>
+        </template>
+        <table
+          class="slds-table slds-table_bordered slds-table_cell-buffer slds-table_striped slds-table_fixed-layout"
+        >
+          <thead>
+            <tr class="slds-text-title_caps">
+              <th scope="col" class="slds-text-align_left slds-size_1-of-3">
+                Category
+              </th>
+              <th scope="col" class="slds-text-align_left slds-size_2-of-3">
+                Description
+              </th>
+              <th scope="col" class="slds-text-align_left slds-size_1-of-3">
+                Action
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="slds-text-align_left">Presence Sync</td>
+              <td>
+                Sync the Genesys and Salesforce Presence, and automatically
+                populate the presence mapping table.
+              </td>
+              <td class="slds-text-align_left">
+                <lightning-button
+                  label="Sync"
+                  onclick={syncPresenceHandler}
+                  variant="neutral"
+                  class="slds-m-top_x-small"
+                ></lightning-button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </lightning-card>
+  </template>
+
+  <template if:false={isSimpleView}>
+    <lightning-card title="Presence Management">
+      <lightning-input
+        type="toggle"
+        label="Options Mode"
+        name="option"
+        checked={isSimpleView}
+        onchange={switchOptionViewHandler}
+        message-toggle-active="Simple"
+        message-toggle-inactive="Advance"
+        slot="actions"
+      ></lightning-input>
+      <div class="slds-p-around_medium">
+        <table
+          class="slds-table slds-table_bordered slds-table_cell-buffer slds-table_striped slds-table_fixed-layout"
+        >
+          <thead>
+            <tr class="slds-text-title_caps">
+              <th scope="col" class="slds-text-align_left slds-size_1-of-3">
+                Category
+              </th>
+              <th scope="col" class="slds-text-align_left slds-size_2-of-3">
+                Description
+              </th>
+              <th scope="col" class="slds-text-align_left slds-size_1-of-3">
+                Action
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Genesys Cloud Presence Actions -->
+            <tr>
+              <td class="slds-text-align_left">Genesys Cloud Presence</td>
+              <td>Sync the latest Genesys Cloud presence data</td>
+              <td class="slds-text-align_left">
+                <lightning-button
+                  label="Sync Presences"
+                  onclick={syncGenesysPresenceHandler}
+                  variant="neutral"
+                  class="slds-m-top_x-small"
+                ></lightning-button>
+              </td>
+            </tr>
+            <tr>
+              <td class="slds-text-align_left">Genesys Cloud Presence</td>
+              <td>Delete all existing Genesys Cloud presence data</td>
+              <td class="slds-text-align_left">
+                <lightning-button
+                  label="Delete All Presences"
+                  onclick={deleteAllGenesysPresenceHandler}
+                  variant="neutral"
+                  class="slds-m-top_x-small"
+                ></lightning-button>
+              </td>
+            </tr>
+
+            <!-- Service Cloud Presence Actions -->
+            <tr>
+              <td class="slds-text-align_left">Service Cloud Presence</td>
+              <td>Sync the latest Service Cloud presence data</td>
+              <td class="slds-text-align_left">
+                <lightning-button
+                  label="Sync Presences"
+                  onclick={sycnSalesforcePresenceHandler}
+                  variant="neutral"
+                  class="slds-m-top_x-small"
+                ></lightning-button>
+              </td>
+            </tr>
+            <tr>
+              <td class="slds-text-align_left">Service Cloud Presence</td>
+              <td>Delete all existing Service Cloud presence data</td>
+              <td class="slds-text-align_left">
+                <lightning-button
+                  label="Delete All Presences"
+                  onclick={deleteAllSalesforcePresenceHandler}
+                  variant="neutral"
+                  class="slds-m-top_x-small"
+                ></lightning-button>
+              </td>
+            </tr>
+            <!-- Genesys to Salesforce Presence Mapping Actions -->
+            <tr>
+              <td class="slds-text-align_left">
+                Genesys to Salesforce Presence Mapping
+              </td>
+              <td>
+                Prefill and update presence mappings from Genesys to Salesforce
+              </td>
+              <td class="slds-text-align_left">
+                <lightning-button
+                  label="Prefill and Update Mappings"
+                  onclick={reloadGenesysToSalesforcePresenceMappingHandler}
+                  variant="neutral"
+                  class="slds-m-top_x-small"
+                ></lightning-button>
+              </td>
+            </tr>
+            <tr>
+              <td class="slds-text-align_left">
+                Genesys to Salesforce Presence Mapping
+              </td>
+              <td>Delete all presence mappings from Genesys to Salesforce</td>
+              <td class="slds-text-align_left">
+                <lightning-button
+                  label="Delete All Mappings"
+                  onclick={deleteAllGenesysToSalesforcePresenceMappingHandler}
+                  variant="neutral"
+                  class="slds-m-top_x-small"
+                ></lightning-button>
+              </td>
+            </tr>
+            <!-- Salesforce to Genesys Presence Mapping Actions -->
+            <tr>
+              <td class="slds-text-align_left">
+                Salesforce to Genesys Presence Mapping
+              </td>
+              <td>
+                Prefill and update presence mappings from Salesforce to Genesys
+              </td>
+              <td class="slds-text-align_left">
+                <lightning-button
+                  label="Prefill and Update Mappings"
+                  onclick={reloadSalesforceToGenesysPresenceMappingHandler}
+                  variant="neutral"
+                  class="slds-m-top_x-small"
+                ></lightning-button>
+              </td>
+            </tr>
+            <tr>
+              <td class="slds-text-align_left">
+                Salesforce to Genesys Presence Mapping
+              </td>
+              <td>Delete all presence mappings from Salesforce to Genesys</td>
+              <td class="slds-text-align_left">
+                <lightning-button
+                  label="Delete All Mappings"
+                  onclick={deleteAllSalesforceToGenesysPresenceMappingHandler}
+                  variant="neutral"
+                  class="slds-m-top_x-small"
+                ></lightning-button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </lightning-card>
+  </template>
+
+</template>
