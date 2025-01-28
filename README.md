@@ -1,4 +1,4 @@
-# # CX-Cloud-from-Genesys-and-Salesforce-Enhanced-Status
+## CX-Cloud-from-Genesys-and-Salesforce-Enhanced-Status
 
 CX Cloud from Genesys and Salesforce with built-in basic sync Genesys presence with Omi-channel presence status, it also allows customer to develop a custom apex class to provide comprehensive status mapping between Genesys Cloud and Salesforce Omni-Channel.
 
