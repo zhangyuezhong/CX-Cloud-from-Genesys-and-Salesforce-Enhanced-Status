@@ -46,12 +46,12 @@ export default class CXCloudPresenceMapping extends LightningElement {
       const confirm = await this.confirmAction();
       if (confirm) {
         // Await the result of the Apex method
-        const resultMessage = await deleteAllGenesysCloudPresences();
-        this.showToast(
-          "success",
-          "Operation Successful",
-          resultMessage + " records were removed"
-        );
+        const count = await deleteAllGenesysCloudPresences();
+        let message =
+          count === 0
+            ? "No records were removed"
+            : `${count} records were successfully removed`;
+        this.showToast("success", "Operation Successful", message);
       }
     } catch (error) {
       this.handleError(error);
@@ -87,12 +87,53 @@ export default class CXCloudPresenceMapping extends LightningElement {
       const confirm = await this.confirmAction();
       if (confirm) {
         // Await the result of the Apex method
-        const resultMessage = await deleteAllServiceCloudPresences();
-        this.showToast(
-          "success",
-          "Operation Successful",
-          resultMessage + " records were removed"
-        );
+        const count = await deleteAllServiceCloudPresences();
+        let message =
+          count === 0
+            ? "No records were removed"
+            : `${count} records were successfully removed`;
+        this.showToast("success", "Operation Successful", message);
+      }
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  async reloadGenesysToSalesforcePresenceMappingHandler() {
+    try {
+      const confirm = await this.confirmAction();
+      if (confirm) {
+        // Await the result of the Apex method
+        const result = await reloadGenesysToSalesforcePresenceMapping();
+        if (Array.isArray(result)) {
+          this.showToast(
+            "success",
+            "Operation Successful",
+            "Task completed successfully!"
+          );
+        } else {
+          this.showToast(
+            "error",
+            "Operation Failed",
+            "The result format was not as expected."
+          );
+        }
+      }
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+  async deleteAllGenesysToSalesforcePresenceMappingHandler() {
+    try {
+      const confirm = await this.confirmAction();
+      if (confirm) {
+        // Await the result of the Apex method
+        const count = await deleteAllGenesysToSalesforcePresenceMapping();
+        let message =
+          count === 0
+            ? "No records were removed"
+            : `${count} records were successfully removed`;
+        this.showToast("success", "Operation Successful", message);
       }
     } catch (error) {
       this.handleError(error);
@@ -129,61 +170,17 @@ export default class CXCloudPresenceMapping extends LightningElement {
       const confirm = await this.confirmAction();
       if (confirm) {
         // Await the result of the Apex method
-        const resultMessage =
-          await deleteAllSalesforceToGenesysPresenceMapping();
-        this.showToast(
-          "success",
-          "Operation Successful",
-          resultMessage + " records were removed"
-        );
+        const count = await deleteAllSalesforceToGenesysPresenceMapping();
+        let message =
+          count === 0
+            ? "No records were removed"
+            : `${count} records were successfully removed`;
+        this.showToast("success", "Operation Successful", message);
       }
     } catch (error) {
       this.handleError(error);
     }
   }
-
-  async reloadGenesysToSalesforcePresenceMappingHandler() {
-    try {
-      const confirm = await this.confirmAction();
-      if (confirm) {
-        // Await the result of the Apex method
-        const result = await reloadGenesysToSalesforcePresenceMapping();
-        if (Array.isArray(result)) {
-          this.showToast(
-            "success",
-            "Operation Successful",
-            "Task completed successfully!"
-          );
-        } else {
-          this.showToast(
-            "error",
-            "Operation Failed",
-            "The result format was not as expected."
-          );
-        }
-      }
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-  async deleteAllGenesysToSalesforcePresenceMappingHandler() {
-    try {
-      const confirm = await this.confirmAction();
-      if (confirm) {
-        // Await the result of the Apex method
-        const resultMessage =
-          await deleteAllGenesysToSalesforcePresenceMapping();
-        this.showToast(
-          "success",
-          "Operation Successful",
-          resultMessage + " records were removed"
-        );
-      }
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
   async syncPresenceHandler() {
     try {
       this.progress = 0;
