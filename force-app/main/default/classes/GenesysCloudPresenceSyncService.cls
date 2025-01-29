@@ -68,22 +68,20 @@ public with sharing class GenesysCloudPresenceSyncService {
 
   // Expose the method to LWC with @AuraEnabled annotation
   @AuraEnabled
-  public static String deleteAllGenesysCloudPresences() {
+  public static Integer deleteAllGenesysCloudPresences() {
     try {
       // Query all Genesys_Cloud_Presence__c records
       List<Genesys_Cloud_Presence__c> presences = [
         SELECT Id
         FROM Genesys_Cloud_Presence__c
       ];
-
+      Integer count = presences.size();
       // Check if there are any records to delete
       if (!presences.isEmpty()) {
         // Delete the records in bulk
         delete presences;
-        return 'Successfully deleted ' + presences.size() + ' Presence.';
-      } else {
-        return 'No Presence found to delete.';
       }
+      return count;
     } catch (Exception e) {
       throw GenesysCloudExceptionUtils.createAuraHandledException('deleteAllGenesysCloudPresences', e);
     }
@@ -143,19 +141,16 @@ public with sharing class GenesysCloudPresenceSyncService {
   }
 
   @AuraEnabled
-  public static String deleteAllGenesysToSalesforcePresenceMapping() {
+  public static Integer deleteAllGenesysToSalesforcePresenceMapping() {
     try {
       List<Genesys_To_Salesforce_Presence_Mapping__c> mappings = getGenesysToSalesforcePresenceMappings();
+      Integer count = mappings.size();
       // Check if there are any records to delete
       if (!mappings.isEmpty()) {
         // Delete the records in bulk
         delete mappings;
-        return 'Successfully deleted ' +
-          mappings.size() +
-          ' Presence mappings.';
-      } else {
-        return 'No Presence mappings found to delete.';
       }
+      return count;
     } catch (Exception e) {
       throw GenesysCloudExceptionUtils.createAuraHandledException(
         'deleteAllGenesysToSalesforcePresenceMapping',

@@ -47,7 +47,11 @@ export default class CXCloudPresenceMapping extends LightningElement {
       if (confirm) {
         // Await the result of the Apex method
         const resultMessage = await deleteAllGenesysCloudPresences();
-        this.showToast("success", "Operation Successful", resultMessage);
+        this.showToast(
+          "success",
+          "Operation Successful",
+          resultMessage + " records were removed"
+        );
       }
     } catch (error) {
       this.handleError(error);
@@ -84,7 +88,11 @@ export default class CXCloudPresenceMapping extends LightningElement {
       if (confirm) {
         // Await the result of the Apex method
         const resultMessage = await deleteAllServiceCloudPresences();
-        this.showToast("success", "Operation Successful", resultMessage);
+        this.showToast(
+          "success",
+          "Operation Successful",
+          resultMessage + " records were removed"
+        );
       }
     } catch (error) {
       this.handleError(error);
@@ -123,7 +131,11 @@ export default class CXCloudPresenceMapping extends LightningElement {
         // Await the result of the Apex method
         const resultMessage =
           await deleteAllSalesforceToGenesysPresenceMapping();
-        this.showToast("success", "Operation Successful", resultMessage);
+        this.showToast(
+          "success",
+          "Operation Successful",
+          resultMessage + " records were removed"
+        );
       }
     } catch (error) {
       this.handleError(error);
@@ -161,7 +173,11 @@ export default class CXCloudPresenceMapping extends LightningElement {
         // Await the result of the Apex method
         const resultMessage =
           await deleteAllGenesysToSalesforcePresenceMapping();
-        this.showToast("success", "Operation Successful", resultMessage);
+        this.showToast(
+          "success",
+          "Operation Successful",
+          resultMessage + " records were removed"
+        );
       }
     } catch (error) {
       this.handleError(error);

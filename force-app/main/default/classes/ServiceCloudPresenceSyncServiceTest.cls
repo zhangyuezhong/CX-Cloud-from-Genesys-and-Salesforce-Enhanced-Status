@@ -138,21 +138,20 @@ public class ServiceCloudPresenceSyncServiceTest {
     scp.DeveloperName__c = 'Break';
     insert scp;
     Test.startTest();
-    String result = ServiceCloudPresenceSyncService.deleteAllServiceCloudPresences();
+    Integer result = ServiceCloudPresenceSyncService.deleteAllServiceCloudPresences();
     Test.stopTest();
     // Verify the results
-    System.assert(result.contains('Successfully deleted 1 Presence'));
+    System.assertEquals(1, result);
   }
 
   @isTest
   static void testDeleteAllServiceCloudPresencesWithNoRecord() {
     // Call the method to test
-
     Test.startTest();
-    String result = ServiceCloudPresenceSyncService.deleteAllServiceCloudPresences();
+    Integer result = ServiceCloudPresenceSyncService.deleteAllServiceCloudPresences();
     Test.stopTest();
     // Verify the results
-    System.assert(result.contains('No Presence Status found'));
+    System.assertEquals(0, result);
   }
 
   @isTest
@@ -222,18 +221,18 @@ public class ServiceCloudPresenceSyncServiceTest {
 
     // Call the method to test
     Test.startTest();
-    String result = ServiceCloudPresenceSyncService.deleteAllSalesforceToGenesysPresenceMapping();
+    Integer result = ServiceCloudPresenceSyncService.deleteAllSalesforceToGenesysPresenceMapping();
     Test.stopTest();
-    System.assert(result.contains('Successfully deleted 2 Presence mappings'));
+    System.assertEquals(2, result);
   }
 
   @isTest
   static void testDeleteAllSalesforceToGenesysPresenceMappingWithNoRecord() {
     // Call the method to test
     Test.startTest();
-    String result = ServiceCloudPresenceSyncService.deleteAllSalesforceToGenesysPresenceMapping();
+    Integer result = ServiceCloudPresenceSyncService.deleteAllSalesforceToGenesysPresenceMapping();
     Test.stopTest();
-    System.assert(result.contains('No Presence mappings found'));
+    System.assertEquals(0, result);
   }
   static Boolean checkExist(
     List<Service_Cloud_Presence__c> serviceCloudPresences,

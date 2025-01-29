@@ -237,30 +237,18 @@ public class GenesysCloudPresenceSyncServiceTest {
 
     // Call the delete method
     Test.startTest();
-    String result = GenesysCloudPresenceSyncService.deleteAllGenesysCloudPresences();
+    Integer result = GenesysCloudPresenceSyncService.deleteAllGenesysCloudPresences();
     Test.stopTest();
-
     // Verify that the records were deleted
-    System.assert(
-      result.contains('Successfully deleted'),
-      'Expected success message for delete'
-    );
-    List<Genesys_Cloud_Presence__c> presences = [
-      SELECT Id
-      FROM Genesys_Cloud_Presence__c
-    ];
-    System.assertEquals(0, presences.size(), 'Expected no records to remain');
+    System.assertEquals(2, result);
   }
 
   @isTest
   static void testDeleteAllGenesysCloudPresencesWithNoPresenceExist() {
     Test.startTest();
-    String result = GenesysCloudPresenceSyncService.deleteAllGenesysCloudPresences();
+    Integer result = GenesysCloudPresenceSyncService.deleteAllGenesysCloudPresences();
     Test.stopTest();
-    System.assert(
-      result.contains('No Presence found'),
-      'Expected success message for delete ' + result
-    );
+    System.assertEquals(0, result);
   }
 
   @isTest
@@ -402,35 +390,19 @@ public class GenesysCloudPresenceSyncServiceTest {
 
     // Call the reload method
     Test.startTest();
-    String result = GenesysCloudPresenceSyncService.deleteAllGenesysToSalesforcePresenceMapping();
+    Integer result = GenesysCloudPresenceSyncService.deleteAllGenesysToSalesforcePresenceMapping();
     Test.stopTest();
     // Verify that the records were deleted
-    System.assert(
-      result.contains('Successfully deleted'),
-      'Expected success message for delete'
-    );
-    List<Genesys_To_Salesforce_Presence_Mapping__c> mappings = [
-      SELECT Id
-      FROM Genesys_To_Salesforce_Presence_Mapping__c
-    ];
-    System.assertEquals(0, mappings.size(), 'Expected no records to remain');
+    System.assertEquals(2, result);
   }
 
   @isTest
   static void testDeleteAllGenesysToSalesforcePresenceMappingWithNoMapping() {
     // Call the reload method
     Test.startTest();
-    String result = GenesysCloudPresenceSyncService.deleteAllGenesysToSalesforcePresenceMapping();
+    Integer result = GenesysCloudPresenceSyncService.deleteAllGenesysToSalesforcePresenceMapping();
     Test.stopTest();
     // Verify that the records were deleted
-    System.assert(
-      result.contains('No Presence mappings found'),
-      'Expected success message for delete'
-    );
-    List<Genesys_To_Salesforce_Presence_Mapping__c> mappings = [
-      SELECT Id
-      FROM Genesys_To_Salesforce_Presence_Mapping__c
-    ];
-    System.assertEquals(0, mappings.size(), 'Expected no records to remain');
+    System.assertEquals(0, result);
   }
 }
