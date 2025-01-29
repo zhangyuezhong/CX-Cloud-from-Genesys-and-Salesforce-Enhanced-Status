@@ -37,7 +37,6 @@ public with sharing class ServiceCloudPresenceSyncService {
       );
 
       List<Service_Cloud_Presence__c> serviceCloudPresences = getServiceCloudPresences();
-
       // check record need to delete.
       for (
         Service_Cloud_Presence__c serviceCloudPresence : serviceCloudPresences

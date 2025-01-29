@@ -59,10 +59,7 @@ public with sharing class GenesysCloudPresenceSyncService {
       }
       return getLocalPresences();
     } catch (Exception e) {
-      throw GenesysCloudExceptionUtils.createAuraHandledException(
-        'syncGenesysCloudPresences',
-        e
-      );
+      throw GenesysCloudExceptionUtils.createAuraHandledException('syncGenesysCloudPresences',e);
     }
   }
 
@@ -133,10 +130,7 @@ public with sharing class GenesysCloudPresenceSyncService {
       }
       return getGenesysToSalesforcePresenceMappings();
     } catch (Exception e) {
-      throw GenesysCloudExceptionUtils.createAuraHandledException(
-        'reloadGenesysToSalesforcePresenceMapping',
-        e
-      );
+      throw GenesysCloudExceptionUtils.createAuraHandledException('reloadGenesysToSalesforcePresenceMapping',e);
     }
   }
 
@@ -152,10 +146,7 @@ public with sharing class GenesysCloudPresenceSyncService {
       }
       return count;
     } catch (Exception e) {
-      throw GenesysCloudExceptionUtils.createAuraHandledException(
-        'deleteAllGenesysToSalesforcePresenceMapping',
-        e
-      );
+      throw GenesysCloudExceptionUtils.createAuraHandledException('deleteAllGenesysToSalesforcePresenceMapping',e);
     }
   }
 
