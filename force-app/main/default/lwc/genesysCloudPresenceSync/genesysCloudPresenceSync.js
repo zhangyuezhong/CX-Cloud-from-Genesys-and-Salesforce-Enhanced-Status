@@ -33,7 +33,7 @@ export default class CXCloudPresenceMapping extends LightningElement {
           this.showToast(
             "error",
             "Operation Failed",
-            "The result format was not as expected."
+            "The result format was not as expected. Please try again."
           );
         }
       }
@@ -74,7 +74,7 @@ export default class CXCloudPresenceMapping extends LightningElement {
           this.showToast(
             "error",
             "Operation Failed",
-            "The result format was not as expected."
+            "The result format was not as expected. Please try again."
           );
         }
       }
@@ -115,7 +115,7 @@ export default class CXCloudPresenceMapping extends LightningElement {
           this.showToast(
             "error",
             "Operation Failed",
-            "The result format was not as expected."
+            "The result format was not as expected. Please try again."
           );
         }
       }
@@ -156,7 +156,7 @@ export default class CXCloudPresenceMapping extends LightningElement {
           this.showToast(
             "error",
             "Operation Failed",
-            "The result format was not as expected."
+            "The result format was not as expected. Please try again."
           );
         }
       }
@@ -181,61 +181,76 @@ export default class CXCloudPresenceMapping extends LightningElement {
       this.handleError(error);
     }
   }
+
   async syncPresenceHandler() {
     try {
       this.progress = 0;
       this.isProgressing = true;
+
       const confirm = await this.confirmAction();
-      if (confirm) {
-        // Await the result of the Apex method
-        let result = await syncGenesysCloudPresences();
-        if (Array.isArray(result)) {
-          this.showToast(
-            "success",
-            "Operation Successful",
-            "Task completed successfully!"
-          );
-          this.progress = 25;
-        } else {
-          this.handleError(new Error("The result format was not as expected."));
-        }
-        result = await syncServiceCloudPresences();
-        if (Array.isArray(result)) {
-          this.showToast(
-            "success",
-            "Operation Successful",
-            "Task completed successfully!"
-          );
-          this.progress = 50;
-        } else {
-          this.handleError(new Error("The result format was not as expected."));
-        }
-        result = await reloadSalesforceToGenesysPresenceMapping();
-        if (Array.isArray(result)) {
-          this.showToast(
-            "success",
-            "Operation Successful",
-            "Task completed successfully!"
-          );
-          this.progress = 75;
-        } else {
-          this.handleError(new Error("The result format was not as expected."));
-        }
-        result = await reloadGenesysToSalesforcePresenceMapping();
-        if (Array.isArray(result)) {
-          this.showToast(
-            "success",
-            "Operation Successful",
-            "Task completed successfully!"
-          );
-          this.progress = 100;
-        } else {
-          this.handleError(new Error("The result format was not as expected."));
-        }
+      if (!confirm) {
+        this.isProgressing = false;
+        return;
       }
-      this.isProgressing = false;
+
+      // Step 1
+      let result = await syncGenesysCloudPresences();
+      if (!Array.isArray(result)) {
+        throw new Error(
+          "The result format was not as expected. Please try again."
+        );
+      }
+      this.progress = 25;
+      this.showToast(
+        "success",
+        "Operation Successful",
+        "Task completed successfully!"
+      );
+
+      // Step 2
+      result = await syncServiceCloudPresences();
+      if (!Array.isArray(result)) {
+        throw new Error(
+          "The result format was not as expected. Please try again."
+        );
+      }
+      this.progress = 50;
+      this.showToast(
+        "success",
+        "Operation Successful",
+        "Task completed successfully!"
+      );
+
+      // Step 3
+      result = await reloadSalesforceToGenesysPresenceMapping();
+      if (!Array.isArray(result)) {
+        throw new Error(
+          "The result format was not as expected. Please try again."
+        );
+      }
+      this.progress = 75;
+      this.showToast(
+        "success",
+        "Operation Successful",
+        "Task completed successfully!"
+      );
+
+      // Step 4
+      result = await reloadGenesysToSalesforcePresenceMapping();
+      if (!Array.isArray(result)) {
+        throw new Error(
+          "The result format was not as expected. Please try again."
+        );
+      }
+      this.progress = 100;
+      this.showToast(
+        "success",
+        "Operation Successful",
+        "Task completed successfully!"
+      );
     } catch (error) {
       this.handleError(error);
+    } finally {
       this.isProgressing = false;
     }
   }
