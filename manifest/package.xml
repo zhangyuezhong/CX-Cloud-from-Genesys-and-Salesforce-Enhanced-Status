@@ -31,10 +31,22 @@
         <name>FlexiPage</name>
     </types>
     <types>
+        <members>Genesys_Cloud_Presence__c</members>
+        <members>Service_Cloud_Presence__c</members>
         <members>GC_For_Presence_Mapping</members>
         <members>Genesys_To_Salesforce_Presence_Mapping__c</members>
         <members>Salesforce_To_Genesys_Presence_Mapping__c</members>
         <name>CustomTab</name>
     </types>
+
+    <types>
+        <members>Genesys_Cloud_OAuth_Credential</members>
+        <name>ExternalCredential</name>
+    </types>
+     <types>
+        <members>Genesys_Cloud_API</members>
+        <name>NamedCredential</name>
+    </types>
+
     <version>61.0</version>
 </Package>

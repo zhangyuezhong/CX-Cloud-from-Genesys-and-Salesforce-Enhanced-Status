@@ -96,9 +96,7 @@ public class GenesysCloudPresenceSyncExtensionTest {
 
     Test.startTest();
     GenesysCloudPresenceSyncExtension extension = new GenesysCloudPresenceSyncExtension();
-    String response = extension.onGenesysCloudStatusChange(
-      JSON.serialize(testData)
-    );
+    String response = extension.onGenesysCloudStatusChange(JSON.serialize(testData));
     Test.stopTest();
 
     // Assert that response contains the Salesforce status ID as expected
@@ -114,23 +112,21 @@ public class GenesysCloudPresenceSyncExtensionTest {
     // Simulate a case where no mapping is found for the Salesforce Status
     String salesforceTargetStatusId = '00B4x00000Wc8sd'; // Example Salesforce Status ID
     String genesysTargetId = 'g1p1'; // Example Genesys Presence ID
-    // Test input JSON (simulate incoming status change)
-    Map<String, Object> testData = new Map<String, Object>{
-      'salesforceStatus' => new Map<String, Object>{
-        'targetStatus' => new Map<String, Object>{
-          'statusId' => salesforceTargetStatusId
+      // Test input JSON (simulate incoming status change)
+      Map<String, Object> testData = new Map<String, Object>{
+        'salesforceStatus' => new Map<String, Object>{
+          'targetStatus' => new Map<String, Object>{
+            'statusId' => salesforceTargetStatusId
+          }
+        },
+        'genesysCloudStatus' => new Map<String, Object>{
+          'targetStatus' => new Map<String, Object>{ 'id' =>  genesysTargetId}
         }
-      },
-      'genesysCloudStatus' => new Map<String, Object>{
-        'targetStatus' => new Map<String, Object>{ 'id' => genesysTargetId }
-      }
-    };
+      };
 
     Test.startTest();
     GenesysCloudPresenceSyncExtension extension = new GenesysCloudPresenceSyncExtension();
-    String response = extension.onSalesforceStatusChange(
-      JSON.serialize(testData)
-    );
+    String response = extension.onSalesforceStatusChange(JSON.serialize(testData));
     Test.stopTest();
 
     // Ensure the response contains default response values or some indication of failure
@@ -150,15 +146,13 @@ public class GenesysCloudPresenceSyncExtensionTest {
         }
       },
       'genesysCloudStatus' => new Map<String, Object>{
-        'targetStatus' => new Map<String, Object>{ 'id' => genesysTargetId }
+        'targetStatus' => new Map<String, Object>{ 'id' =>  genesysTargetId}
       }
     };
 
     Test.startTest();
     GenesysCloudPresenceSyncExtension extension = new GenesysCloudPresenceSyncExtension();
-    String response = extension.onGenesysCloudStatusChange(
-      JSON.serialize(testData)
-    );
+    String response = extension.onGenesysCloudStatusChange(JSON.serialize(testData));
     Test.stopTest();
 
     // Ensure the response contains default response values or some indication of failure
