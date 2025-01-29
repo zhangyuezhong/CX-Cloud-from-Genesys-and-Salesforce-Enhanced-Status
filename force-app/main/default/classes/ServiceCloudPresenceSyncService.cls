@@ -1,4 +1,30 @@
 public with sharing class ServiceCloudPresenceSyncService {
+  // Service layer for querying ServicePresenceStatus
+  public interface IServicePresenceStatusService {
+    List<ServicePresenceStatus> getServicePresenceStatuses();
+  }
+
+  // Default implementation of the service
+  public class ServicePresenceStatusService implements IServicePresenceStatusService {
+    public List<ServicePresenceStatus> getServicePresenceStatuses() {
+      return [
+        SELECT Id, MasterLabel, DeveloperName
+        FROM ServicePresenceStatus
+        WHERE IsDeleted = FALSE
+      ];
+    }
+  }
+
+  // Use dependency injection to allow mocking in tests
+  private static IServicePresenceStatusService servicePresenceStatusService = new ServicePresenceStatusService();
+
+  @TestVisible
+  private static void setServicePresenceStatusService(
+    IServicePresenceStatusService service
+  ) {
+    servicePresenceStatusService = service;
+  }
+
   @AuraEnabled
   public static List<Service_Cloud_Presence__c> syncServiceCloudPresences() {
     try {
@@ -7,7 +33,7 @@ public with sharing class ServiceCloudPresenceSyncService {
       List<Service_Cloud_Presence__c> toInsertList = new List<Service_Cloud_Presence__c>();
 
       Map<String, ServicePresenceStatus> servicePresenceStatusMap = convertToMap(
-        getServicePresenceStatuses()
+        servicePresenceStatusService.getServicePresenceStatuses()
       );
 
       List<Service_Cloud_Presence__c> serviceCloudPresences = getServiceCloudPresences();
@@ -79,14 +105,12 @@ public with sharing class ServiceCloudPresenceSyncService {
         insert scp;
       }
       ///
-
       return getServiceCloudPresences();
     } catch (Exception e) {
-      String errorMessage = getFormattedErrorMessage(
+      throw GenesysCloudExceptionUtils.createAuraHandledException(
         'syncServiceCloudPresences',
         e
       );
-      throw new AuraHandledException(errorMessage);
     }
   }
 
@@ -107,11 +131,10 @@ public with sharing class ServiceCloudPresenceSyncService {
         return 'No Presence Status found to delete.';
       }
     } catch (Exception e) {
-      String errorMessage = getFormattedErrorMessage(
+      throw GenesysCloudExceptionUtils.createAuraHandledException(
         'deleteAllServiceCloudPresences',
         e
       );
-      throw new AuraHandledException(errorMessage);
     }
   }
 
@@ -160,11 +183,10 @@ public with sharing class ServiceCloudPresenceSyncService {
       }
       return getSalesforceToGenesysPresenceMappings();
     } catch (Exception e) {
-      String errorMessage = getFormattedErrorMessage(
+      throw GenesysCloudExceptionUtils.createAuraHandledException(
         'reloadSalesforceToGenesysCloudPresenceMapping',
         e
       );
-      throw new AuraHandledException(errorMessage);
     }
   }
 
@@ -183,21 +205,13 @@ public with sharing class ServiceCloudPresenceSyncService {
         return 'No Presence mappings found to delete.';
       }
     } catch (Exception e) {
-      String errorMessage = getFormattedErrorMessage(
+      throw GenesysCloudExceptionUtils.createAuraHandledException(
         'deleteAllSalesforceToGenesysCloudPresenceMapping',
         e
       );
-      throw new AuraHandledException(errorMessage);
     }
   }
 
-  private static List<ServicePresenceStatus> getServicePresenceStatuses() {
-    return [
-      SELECT Id, MasterLabel, DeveloperName
-      FROM ServicePresenceStatus
-      WHERE IsDeleted = FALSE
-    ];
-  }
   private static List<Service_Cloud_Presence__c> getServiceCloudPresences() {
     return [
       SELECT Id, Name, Status_Id__c, DeveloperName__c
@@ -233,27 +247,5 @@ public with sharing class ServiceCloudPresenceSyncService {
     salesforcePresenceStatus.Status_Id__c = servicePresenceStatus.Id.to15();
     salesforcePresenceStatus.DeveloperName__c = servicePresenceStatus.DeveloperName;
     return salesforcePresenceStatus;
-  }
-
-  // Utility method to return a formatted error message as a string
-  public static String getFormattedErrorMessage(
-    String methodName,
-    Exception e
-  ) {
-    // Format the detailed error message
-    String errorMessage = String.format(
-      'An error occurred in method {0}.\n' +
-        'Error Message: {1}\n' +
-        'Stack Trace: {2}\n' +
-        'Timestamp: {3}\n',
-      new List<Object>{
-        methodName, // Method name
-        e.getMessage(), // Exception message
-        e.getStackTraceString(), // Full stack trace
-        DateTime.now().format() // Current timestamp
-      }
-    );
-    // Return the formatted error message as a string
-    return errorMessage;
   }
 }

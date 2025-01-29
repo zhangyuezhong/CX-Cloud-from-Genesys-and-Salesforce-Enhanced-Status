@@ -59,7 +59,10 @@ public with sharing class GenesysCloudPresenceSyncService {
       }
       return getLocalPresences();
     } catch (Exception e) {
-      throw createAuraHandledException('syncGenesysCloudPresences', e);
+      throw GenesysCloudExceptionUtils.createAuraHandledException(
+        'syncGenesysCloudPresences',
+        e
+      );
     }
   }
 
@@ -82,7 +85,7 @@ public with sharing class GenesysCloudPresenceSyncService {
         return 'No Presence found to delete.';
       }
     } catch (Exception e) {
-      throw createAuraHandledException('deleteAllGenesysCloudPresences', e);
+      throw GenesysCloudExceptionUtils.createAuraHandledException('deleteAllGenesysCloudPresences', e);
     }
   }
 
@@ -132,7 +135,7 @@ public with sharing class GenesysCloudPresenceSyncService {
       }
       return getGenesysToSalesforcePresenceMappings();
     } catch (Exception e) {
-      throw createAuraHandledException(
+      throw GenesysCloudExceptionUtils.createAuraHandledException(
         'reloadGenesysToSalesforcePresenceMapping',
         e
       );
@@ -154,7 +157,7 @@ public with sharing class GenesysCloudPresenceSyncService {
         return 'No Presence mappings found to delete.';
       }
     } catch (Exception e) {
-      throw createAuraHandledException(
+      throw GenesysCloudExceptionUtils.createAuraHandledException(
         'deleteAllGenesysToSalesforcePresenceMapping',
         e
       );
@@ -238,36 +241,5 @@ public with sharing class GenesysCloudPresenceSyncService {
     public String divisionId;
     public Boolean deactivated;
     public String selfUri;
-  }
-
-  private static AuraHandledException createAuraHandledException(
-    String method,
-    Exception e
-  ) {
-    String errorMessage = getFormattedErrorMessage(method, e);
-    AuraHandledException ex = new AuraHandledException(errorMessage);
-    ex.setMessage(errorMessage);
-    return ex;
-  }
-  // Utility method to return a formatted error message as a string
-  private static String getFormattedErrorMessage(
-    String methodName,
-    Exception e
-  ) {
-    // Format the detailed error message
-    String errorMessage = String.format(
-      'An error occurred in method {0}.\n' +
-        'Error Message: {1}\n' +
-        'Stack Trace: {2}\n' +
-        'Timestamp: {3}\n',
-      new List<Object>{
-        methodName, // Method name
-        e.getMessage(), // Exception message
-        e.getStackTraceString(), // Full stack trace
-        DateTime.now().format() // Current timestamp
-      }
-    );
-    // Return the formatted error message as a string
-    return errorMessage;
   }
 }
