@@ -1,28 +1,39 @@
 public with sharing class ServiceCloudPresenceSyncService {
-  // Service layer for querying ServicePresenceStatus
-  public interface IServicePresenceStatusService {
+  public interface IDataAccessService {
     List<ServicePresenceStatus> getServicePresenceStatuses();
+    List<Service_Cloud_Presence__c> getServiceCloudPresences();
+    List<Salesforce_To_Genesys_Presence_Mapping__c> getSalesforceToGenesysPresenceMappings();
   }
 
-  // Default implementation of the service
-  public class ServicePresenceStatusService implements IServicePresenceStatusService {
-    public List<ServicePresenceStatus> getServicePresenceStatuses() {
+  public abstract class DataAccessServiceBase implements IDataAccessService {
+    public virtual List<ServicePresenceStatus> getServicePresenceStatuses() {
       return [
         SELECT Id, MasterLabel, DeveloperName
         FROM ServicePresenceStatus
         WHERE IsDeleted = FALSE
       ];
     }
+    public virtual List<Service_Cloud_Presence__c> getServiceCloudPresences() {
+      return [
+        SELECT Id, Name, Status_Id__c, DeveloperName__c
+        FROM Service_Cloud_Presence__c
+      ];
+    }
+    public virtual List<Salesforce_To_Genesys_Presence_Mapping__c> getSalesforceToGenesysPresenceMappings() {
+      return [
+        SELECT Id, Service_Cloud_Presence__r.Id, Genesys_Cloud_Presence__r.Id
+        FROM Salesforce_To_Genesys_Presence_Mapping__c
+      ];
+    }
+  }
+  public class DefaultDataAccessServiceImpl extends DataAccessServiceBase {
   }
 
   // Use dependency injection to allow mocking in tests
-  private static IServicePresenceStatusService servicePresenceStatusService = new ServicePresenceStatusService();
-
+  private static IDataAccessService dataAccessService = new DefaultDataAccessServiceImpl();
   @TestVisible
-  private static void setServicePresenceStatusService(
-    IServicePresenceStatusService service
-  ) {
-    servicePresenceStatusService = service;
+  private static void setDataAccessService(IDataAccessService service) {
+    dataAccessService = service;
   }
 
   @AuraEnabled
@@ -33,10 +44,10 @@ public with sharing class ServiceCloudPresenceSyncService {
       List<Service_Cloud_Presence__c> toInsertList = new List<Service_Cloud_Presence__c>();
 
       Map<String, ServicePresenceStatus> servicePresenceStatusMap = convertToMap(
-        servicePresenceStatusService.getServicePresenceStatuses()
+        dataAccessService.getServicePresenceStatuses()
       );
 
-      List<Service_Cloud_Presence__c> serviceCloudPresences = getServiceCloudPresences();
+      List<Service_Cloud_Presence__c> serviceCloudPresences = dataAccessService.getServiceCloudPresences();
       // check record need to delete.
       for (
         Service_Cloud_Presence__c serviceCloudPresence : serviceCloudPresences
@@ -104,7 +115,7 @@ public with sharing class ServiceCloudPresenceSyncService {
         insert scp;
       }
       ///
-      return getServiceCloudPresences();
+      return dataAccessService.getServiceCloudPresences();
     } catch (Exception e) {
       throw GenesysCloudExceptionUtils.createAuraHandledException(
         'syncServiceCloudPresences',
@@ -118,7 +129,7 @@ public with sharing class ServiceCloudPresenceSyncService {
   public static Integer deleteAllServiceCloudPresences() {
     try {
       // Query all Service_Cloud_Presence__c records
-      List<Service_Cloud_Presence__c> presenceStatuses = getServiceCloudPresences();
+      List<Service_Cloud_Presence__c> presenceStatuses = dataAccessService.getServiceCloudPresences();
       Integer count = presenceStatuses.size();
       // Check if there are any records to delete
       if (!presenceStatuses.isEmpty()) {
@@ -137,13 +148,13 @@ public with sharing class ServiceCloudPresenceSyncService {
   @AuraEnabled
   public static List<Salesforce_To_Genesys_Presence_Mapping__c> reloadSalesforceToGenesysPresenceMapping() {
     try {
-      List<Service_Cloud_Presence__c> serviceCloudPresences = getServiceCloudPresences();
+      List<Service_Cloud_Presence__c> serviceCloudPresences = dataAccessService.getServiceCloudPresences();
       Map<String, Service_Cloud_Presence__c> serviceCloudPresencesMap = new Map<String, Service_Cloud_Presence__c>();
       for (Service_Cloud_Presence__c scp : serviceCloudPresences) {
         serviceCloudPresencesMap.put(scp.Id, scp);
       }
 
-      List<Salesforce_To_Genesys_Presence_Mapping__c> mappings = getSalesforceToGenesysPresenceMappings();
+      List<Salesforce_To_Genesys_Presence_Mapping__c> mappings = dataAccessService.getSalesforceToGenesysPresenceMappings();
 
       List<Salesforce_To_Genesys_Presence_Mapping__c> toDeleteList = new List<Salesforce_To_Genesys_Presence_Mapping__c>();
       List<Salesforce_To_Genesys_Presence_Mapping__c> toInsertList = new List<Salesforce_To_Genesys_Presence_Mapping__c>();
@@ -177,7 +188,7 @@ public with sharing class ServiceCloudPresenceSyncService {
       if (!toInsertList.isEmpty()) {
         insert toInsertList;
       }
-      return getSalesforceToGenesysPresenceMappings();
+      return dataAccessService.getSalesforceToGenesysPresenceMappings();
     } catch (Exception e) {
       throw GenesysCloudExceptionUtils.createAuraHandledException(
         'reloadSalesforceToGenesysCloudPresenceMapping',
@@ -189,7 +200,7 @@ public with sharing class ServiceCloudPresenceSyncService {
   @AuraEnabled
   public static Integer deleteAllSalesforceToGenesysPresenceMapping() {
     try {
-      List<Salesforce_To_Genesys_Presence_Mapping__c> mappings = getSalesforceToGenesysPresenceMappings();
+      List<Salesforce_To_Genesys_Presence_Mapping__c> mappings = dataAccessService.getSalesforceToGenesysPresenceMappings();
       Integer count = mappings.size();
       // Check if there are any records to delete
       if (!mappings.isEmpty()) {
@@ -203,20 +214,6 @@ public with sharing class ServiceCloudPresenceSyncService {
         e
       );
     }
-  }
-
-  private static List<Service_Cloud_Presence__c> getServiceCloudPresences() {
-    return [
-      SELECT Id, Name, Status_Id__c, DeveloperName__c
-      FROM Service_Cloud_Presence__c
-    ];
-  }
-
-  private static List<Salesforce_To_Genesys_Presence_Mapping__c> getSalesforceToGenesysPresenceMappings() {
-    return [
-      SELECT Id, Service_Cloud_Presence__r.Id, Genesys_Cloud_Presence__r.Id
-      FROM Salesforce_To_Genesys_Presence_Mapping__c
-    ];
   }
 
   private static Map<String, ServicePresenceStatus> convertToMap(

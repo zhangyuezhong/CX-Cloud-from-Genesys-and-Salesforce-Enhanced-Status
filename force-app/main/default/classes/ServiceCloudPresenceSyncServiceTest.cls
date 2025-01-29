@@ -2,15 +2,36 @@
 public class ServiceCloudPresenceSyncServiceTest {
   // Mock implementation of IServicePresenceStatusService
 
-  private class MockServicePresenceStatusService implements ServiceCloudPresenceSyncService.IServicePresenceStatusService {
+  private class MockDataAccessService extends ServiceCloudPresenceSyncService.DataAccessServiceBase {
     private List<ServicePresenceStatus> mockData;
-    public MockServicePresenceStatusService(
-      List<ServicePresenceStatus> mockData
-    ) {
+    private Boolean allowed = true;
+    public MockDataAccessService(List<ServicePresenceStatus> mockData) {
       this.mockData = mockData;
     }
-    public List<ServicePresenceStatus> getServicePresenceStatuses() {
+    public MockDataAccessService(
+      List<ServicePresenceStatus> mockData,
+      Boolean allowed
+    ) {
+      this.mockData = mockData;
+      this.allowed = allowed;
+    }
+    public override List<ServicePresenceStatus> getServicePresenceStatuses() {
+      if (!allowed) {
+        throw new HandledException('Mock NoAccessException');
+      }
       return this.mockData;
+    }
+    public override List<Service_Cloud_Presence__c> getServiceCloudPresences() {
+      if (!allowed) {
+        throw new HandledException('Mock NoAccessException');
+      }
+      return super.getServiceCloudPresences();
+    }
+    public override List<Salesforce_To_Genesys_Presence_Mapping__c> getSalesforceToGenesysPresenceMappings() {
+      if (!allowed) {
+        throw new HandledException('Mock NoAccessException');
+      }
+      return super.getSalesforceToGenesysPresenceMappings();
     }
   }
 
@@ -30,8 +51,8 @@ public class ServiceCloudPresenceSyncServiceTest {
     };
 
     // Inject the mock service
-    ServiceCloudPresenceSyncService.setServicePresenceStatusService(
-      new MockServicePresenceStatusService(mockData)
+    ServiceCloudPresenceSyncService.setDataAccessService(
+      new MockDataAccessService(mockData)
     );
     // Call the method to test
     Test.startTest();
@@ -56,6 +77,36 @@ public class ServiceCloudPresenceSyncServiceTest {
   }
 
   @isTest
+  public static void testSyncServiceCloudPresencesExpectException() {
+    List<ServicePresenceStatus> mockData = new List<ServicePresenceStatus>{
+      new ServicePresenceStatus(
+        Id = '0N5dL0000001tC9SAI', // Mocked Id
+        MasterLabel = 'Available',
+        DeveloperName = 'Available'
+      ),
+      new ServicePresenceStatus(
+        Id = '0N5dL0000004qpdSAA', // Mocked Id
+        MasterLabel = 'Busy',
+        DeveloperName = 'Busy'
+      )
+    };
+    // Inject the mock service
+    ServiceCloudPresenceSyncService.setDataAccessService(
+      new MockDataAccessService(mockData, false)
+    );
+    // Call the method to test
+    Boolean exceptionThrown = false;
+    Test.startTest();
+    try {
+      List<Service_Cloud_Presence__c> result = ServiceCloudPresenceSyncService.syncServiceCloudPresences();
+    } catch (Exception ex) {
+      exceptionThrown = true;
+    }
+    Test.stopTest();
+    System.assertEquals(true, exceptionThrown, 'expected exception throw');
+  }
+
+  @isTest
   public static void testSyncServiceCloudPresencesWithNewPresence() {
     List<ServicePresenceStatus> mockData = new List<ServicePresenceStatus>{
       new ServicePresenceStatus(
@@ -70,8 +121,8 @@ public class ServiceCloudPresenceSyncServiceTest {
       )
     };
     // Inject the mock service
-    ServiceCloudPresenceSyncService.setServicePresenceStatusService(
-      new MockServicePresenceStatusService(mockData)
+    ServiceCloudPresenceSyncService.setDataAccessService(
+      new MockDataAccessService(mockData)
     );
     // Call the method to test
     Test.startTest();
@@ -102,8 +153,8 @@ public class ServiceCloudPresenceSyncServiceTest {
       )
     };
     // Inject the mock service
-    ServiceCloudPresenceSyncService.setServicePresenceStatusService(
-      new MockServicePresenceStatusService(mockData)
+    ServiceCloudPresenceSyncService.setDataAccessService(
+      new MockDataAccessService(mockData)
     );
     // Call the method to test
     result = ServiceCloudPresenceSyncService.syncServiceCloudPresences();
@@ -155,6 +206,23 @@ public class ServiceCloudPresenceSyncServiceTest {
   }
 
   @isTest
+  static void testDeleteAllServiceCloudPresencesWithException() {
+    // Call the method to test
+    ServiceCloudPresenceSyncService.setDataAccessService(
+      new MockDataAccessService(null, false)
+    );
+    Boolean exceptionThrown = false;
+    Test.startTest();
+    try {
+      Integer result = ServiceCloudPresenceSyncService.deleteAllServiceCloudPresences();
+    } catch (Exception ex) {
+      exceptionThrown = true;
+    }
+    Test.stopTest();
+    // Verify the results
+    System.assertEquals(true, exceptionThrown, 'expected exception');
+  }
+  @isTest
   static void testReloadSalesforceToGenesysPresenceMapping() {
     // Call the method to test
 
@@ -197,6 +265,22 @@ public class ServiceCloudPresenceSyncServiceTest {
   }
 
   @isTest
+  static void testReloadSalesforceToGenesysPresenceMappingWithException() {
+    // Call the method to test
+    ServiceCloudPresenceSyncService.setDataAccessService(
+      new MockDataAccessService(null, false)
+    );
+    Test.startTest();
+    Boolean exceptionThrown = false;
+    try {
+      List<Salesforce_To_Genesys_Presence_Mapping__c> result = ServiceCloudPresenceSyncService.reloadSalesforceToGenesysPresenceMapping();
+    } catch (Exception ex) {
+      exceptionThrown = true;
+    }
+    Test.stopTest();
+    System.assertEquals(true, exceptionThrown);
+  }
+  @isTest
   static void testDeleteAllSalesforceToGenesysPresenceMapping() {
     Service_Cloud_Presence__c scp1 = new Service_Cloud_Presence__c();
     scp1.Status_Id__c = '0N5dL0000001tC9';
@@ -233,6 +317,23 @@ public class ServiceCloudPresenceSyncServiceTest {
     Integer result = ServiceCloudPresenceSyncService.deleteAllSalesforceToGenesysPresenceMapping();
     Test.stopTest();
     System.assertEquals(0, result);
+  }
+
+  @isTest
+  static void testDeleteAllSalesforceToGenesysPresenceMappingWithException() {
+    // Call the method to test
+    ServiceCloudPresenceSyncService.setDataAccessService(
+      new MockDataAccessService(null, false)
+    );
+    Boolean exceptionThrown = false;
+    Test.startTest();
+    try {
+      Integer result = ServiceCloudPresenceSyncService.deleteAllSalesforceToGenesysPresenceMapping();
+    } catch (Exception ex) {
+      exceptionThrown = true;
+    }
+    Test.stopTest();
+    System.assertEquals(true, exceptionThrown);
   }
   static Boolean checkExist(
     List<Service_Cloud_Presence__c> serviceCloudPresences,

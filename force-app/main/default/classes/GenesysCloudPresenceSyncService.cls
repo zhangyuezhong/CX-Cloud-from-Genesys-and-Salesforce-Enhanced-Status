@@ -1,4 +1,71 @@
 public with sharing class GenesysCloudPresenceSyncService {
+  public interface IDataAccessService {
+    Map<String, PresenceDefinition> getRemotePresenceDefinitions();
+    List<Genesys_Cloud_Presence__c> getLocalPresences();
+    List<Genesys_To_Salesforce_Presence_Mapping__c> getGenesysToSalesforcePresenceMappings();
+  }
+
+  public abstract class DataAccessServiceBase implements IDataAccessService {
+    public virtual Map<String, PresenceDefinition> getRemotePresenceDefinitions() {
+      Map<String, Object> responseMap = GenesysCloudService.get(
+        '/api/v2/presence/definitions?deactivated=FALSE',
+        new Map<String, String>()
+      );
+      // Extract the entities array from the response
+      List<Object> entities = (List<Object>) responseMap.get('entities');
+
+      Map<String, PresenceDefinition> presenceDefinitionMap = new Map<String, PresenceDefinition>();
+      // Process each entity and extract relevant data
+      for (Object item : entities) {
+        Map<String, Object> entity = (Map<String, Object>) item;
+        PresenceDefinition presenceDefinition = new PresenceDefinition();
+        presenceDefinition.id = (String) entity.get('id');
+        presenceDefinition.type = (String) entity.get('type');
+        presenceDefinition.languageLabels = (Map<String, Object>) entity.get(
+          'languageLabels'
+        );
+        presenceDefinition.systemPresence = (String) entity.get(
+          'systemPresence'
+        );
+        presenceDefinition.divisionId = (String) entity.get('divisionId');
+        presenceDefinition.deactivated = (Boolean) entity.get('deactivated');
+        presenceDefinition.selfUri = (String) entity.get('selfUri');
+
+        // Add the processed entity to the list
+        presenceDefinitionMap.put(presenceDefinition.id, presenceDefinition);
+      }
+      return presenceDefinitionMap;
+    }
+    public virtual List<Genesys_Cloud_Presence__c> getLocalPresences() {
+      return [
+        SELECT
+          Id,
+          Name,
+          Presence_Id__c,
+          Type__c,
+          Label__c,
+          System_Presence__c,
+          DivisionId__c
+        FROM Genesys_Cloud_Presence__c
+      ];
+    }
+    public virtual List<Genesys_To_Salesforce_Presence_Mapping__c> getGenesysToSalesforcePresenceMappings() {
+      return [
+        SELECT Id, Genesys_Cloud_Presence__r.Id, Service_Cloud_Presence__r.Id
+        FROM Genesys_To_Salesforce_Presence_Mapping__c
+      ];
+    }
+  }
+  public class DefaultDataAccessServiceImpl extends DataAccessServiceBase {
+  }
+
+  // Use dependency injection to allow mocking in tests
+  private static IDataAccessService dataAccessService = new DefaultDataAccessServiceImpl();
+  @TestVisible
+  private static void setDataAccessService(IDataAccessService service) {
+    dataAccessService = service;
+  }
+
   @AuraEnabled
   public static List<Genesys_Cloud_Presence__c> syncGenesysCloudPresences() {
     try {
@@ -6,10 +73,10 @@ public with sharing class GenesysCloudPresenceSyncService {
       List<Genesys_Cloud_Presence__c> toUpdateList = new List<Genesys_Cloud_Presence__c>();
       List<Genesys_Cloud_Presence__c> toInsertList = new List<Genesys_Cloud_Presence__c>();
 
-      Map<String, PresenceDefinition> remotePresenceDefinitionsMap = getRemotePresenceDefinitions();
+      Map<String, PresenceDefinition> remotePresenceDefinitionsMap = dataAccessService.getRemotePresenceDefinitions();
 
       // Step 3: Query the existing Genesys_Cloud_Presence__c records
-      List<Genesys_Cloud_Presence__c> localPresences = getLocalPresences();
+      List<Genesys_Cloud_Presence__c> localPresences = dataAccessService.getLocalPresences();
 
       // check record need to delete.
       for (Genesys_Cloud_Presence__c localPresence : localPresences) {
@@ -57,9 +124,12 @@ public with sharing class GenesysCloudPresenceSyncService {
       if (!toInsertList.isEmpty()) {
         insert toInsertList;
       }
-      return getLocalPresences();
+      return dataAccessService.getLocalPresences();
     } catch (Exception e) {
-      throw GenesysCloudExceptionUtils.createAuraHandledException('syncGenesysCloudPresences',e);
+      throw GenesysCloudExceptionUtils.createAuraHandledException(
+        'syncGenesysCloudPresences',
+        e
+      );
     }
   }
 
@@ -68,10 +138,7 @@ public with sharing class GenesysCloudPresenceSyncService {
   public static Integer deleteAllGenesysCloudPresences() {
     try {
       // Query all Genesys_Cloud_Presence__c records
-      List<Genesys_Cloud_Presence__c> presences = [
-        SELECT Id
-        FROM Genesys_Cloud_Presence__c
-      ];
+      List<Genesys_Cloud_Presence__c> presences = dataAccessService.getLocalPresences();
       Integer count = presences.size();
       // Check if there are any records to delete
       if (!presences.isEmpty()) {
@@ -80,21 +147,24 @@ public with sharing class GenesysCloudPresenceSyncService {
       }
       return count;
     } catch (Exception e) {
-      throw GenesysCloudExceptionUtils.createAuraHandledException('deleteAllGenesysCloudPresences', e);
+      throw GenesysCloudExceptionUtils.createAuraHandledException(
+        'deleteAllGenesysCloudPresences',
+        e
+      );
     }
   }
 
   @AuraEnabled
   public static List<Genesys_To_Salesforce_Presence_Mapping__c> reloadGenesysToSalesforcePresenceMapping() {
     try {
-      List<Genesys_Cloud_Presence__c> genesysCloudPresences = getLocalPresences();
+      List<Genesys_Cloud_Presence__c> genesysCloudPresences = dataAccessService.getLocalPresences();
 
       Map<String, Genesys_Cloud_Presence__c> genesysCloudPresencesMap = new Map<String, Genesys_Cloud_Presence__c>();
       for (Genesys_Cloud_Presence__c gcp : genesysCloudPresences) {
         genesysCloudPresencesMap.put(gcp.Id, gcp);
       }
 
-      List<Genesys_To_Salesforce_Presence_Mapping__c> mappings = getGenesysToSalesforcePresenceMappings();
+      List<Genesys_To_Salesforce_Presence_Mapping__c> mappings = dataAccessService.getGenesysToSalesforcePresenceMappings();
 
       List<Genesys_To_Salesforce_Presence_Mapping__c> toDeleteList = new List<Genesys_To_Salesforce_Presence_Mapping__c>();
       List<Genesys_To_Salesforce_Presence_Mapping__c> toInsertList = new List<Genesys_To_Salesforce_Presence_Mapping__c>();
@@ -128,16 +198,19 @@ public with sharing class GenesysCloudPresenceSyncService {
       if (!toInsertList.isEmpty()) {
         insert toInsertList;
       }
-      return getGenesysToSalesforcePresenceMappings();
+      return dataAccessService.getGenesysToSalesforcePresenceMappings();
     } catch (Exception e) {
-      throw GenesysCloudExceptionUtils.createAuraHandledException('reloadGenesysToSalesforcePresenceMapping',e);
+      throw GenesysCloudExceptionUtils.createAuraHandledException(
+        'reloadGenesysToSalesforcePresenceMapping',
+        e
+      );
     }
   }
 
   @AuraEnabled
   public static Integer deleteAllGenesysToSalesforcePresenceMapping() {
     try {
-      List<Genesys_To_Salesforce_Presence_Mapping__c> mappings = getGenesysToSalesforcePresenceMappings();
+      List<Genesys_To_Salesforce_Presence_Mapping__c> mappings = dataAccessService.getGenesysToSalesforcePresenceMappings();
       Integer count = mappings.size();
       // Check if there are any records to delete
       if (!mappings.isEmpty()) {
@@ -146,59 +219,11 @@ public with sharing class GenesysCloudPresenceSyncService {
       }
       return count;
     } catch (Exception e) {
-      throw GenesysCloudExceptionUtils.createAuraHandledException('deleteAllGenesysToSalesforcePresenceMapping',e);
-    }
-  }
-
-  private static List<Genesys_Cloud_Presence__c> getLocalPresences() {
-    return [
-      SELECT
-        Id,
-        Name,
-        Presence_Id__c,
-        Type__c,
-        Label__c,
-        System_Presence__c,
-        DivisionId__c
-      FROM Genesys_Cloud_Presence__c
-    ];
-  }
-
-  private static List<Genesys_To_Salesforce_Presence_Mapping__c> getGenesysToSalesforcePresenceMappings() {
-    return [
-      SELECT Id, Genesys_Cloud_Presence__r.Id, Service_Cloud_Presence__r.Id
-      FROM Genesys_To_Salesforce_Presence_Mapping__c
-    ];
-  }
-
-  private static Map<String, PresenceDefinition> getRemotePresenceDefinitions() {
-    Map<String, Object> responseMap = GenesysCloudService.get(
-      '/api/v2/presence/definitions?deactivated=FALSE',
-      new Map<String, String>()
-    );
-    // Extract the entities array from the response
-    List<Object> entities = (List<Object>) responseMap.get('entities');
-
-    Map<String, PresenceDefinition> presenceDefinitionMap = new Map<String, PresenceDefinition>();
-
-    // Process each entity and extract relevant data
-    for (Object item : entities) {
-      Map<String, Object> entity = (Map<String, Object>) item;
-      PresenceDefinition presenceDefinition = new PresenceDefinition();
-      presenceDefinition.id = (String) entity.get('id');
-      presenceDefinition.type = (String) entity.get('type');
-      presenceDefinition.languageLabels = (Map<String, Object>) entity.get(
-        'languageLabels'
+      throw GenesysCloudExceptionUtils.createAuraHandledException(
+        'deleteAllGenesysToSalesforcePresenceMapping',
+        e
       );
-      presenceDefinition.systemPresence = (String) entity.get('systemPresence');
-      presenceDefinition.divisionId = (String) entity.get('divisionId');
-      presenceDefinition.deactivated = (Boolean) entity.get('deactivated');
-      presenceDefinition.selfUri = (String) entity.get('selfUri');
-
-      // Add the processed entity to the list
-      presenceDefinitionMap.put(presenceDefinition.id, presenceDefinition);
     }
-    return presenceDefinitionMap;
   }
 
   private static Genesys_Cloud_Presence__c mapPresenceDefinitionToPresence(

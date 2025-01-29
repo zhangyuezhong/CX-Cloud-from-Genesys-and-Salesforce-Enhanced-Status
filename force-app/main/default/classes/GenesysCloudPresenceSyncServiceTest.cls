@@ -1,5 +1,31 @@
 @isTest
 public class GenesysCloudPresenceSyncServiceTest {
+  private class MockDataAccessService extends GenesysCloudPresenceSyncService.DataAccessServiceBase {
+    private Boolean allowed = true;
+
+    public MockDataAccessService(Boolean allowed) {
+      this.allowed = allowed;
+    }
+    public override Map<String, PresenceDefinition> getRemotePresenceDefinitions() {
+      if (!allowed) {
+        throw new HandledException('Mock NoAccessException');
+      }
+      return super.getRemotePresenceDefinitions();
+    }
+    public override List<Genesys_Cloud_Presence__c> getLocalPresences() {
+      if (!allowed) {
+        throw new HandledException('Mock NoAccessException');
+      }
+      return super.getLocalPresences();
+    }
+    public override List<Genesys_To_Salesforce_Presence_Mapping__c> getGenesysToSalesforcePresenceMappings() {
+      if (!allowed) {
+        throw new HandledException('Mock NoAccessException');
+      }
+      return super.getGenesysToSalesforcePresenceMappings();
+    }
+  }
+
   @isTest
   static void testSyncGenesysCloudPresences() {
     // Mock the HTTP response
@@ -252,6 +278,22 @@ public class GenesysCloudPresenceSyncServiceTest {
   }
 
   @isTest
+  static void testDeleteAllGenesysCloudPresencesWithException() {
+    Test.startTest();
+    GenesysCloudPresenceSyncService.setDataAccessService(
+      new MockDataAccessService(false)
+    );
+    Boolean exceptionThrown = false;
+    try {
+      Integer result = GenesysCloudPresenceSyncService.deleteAllGenesysCloudPresences();
+    } catch (Exception ex) {
+      exceptionThrown = true;
+    }
+    Test.stopTest();
+    System.assertEquals(true, exceptionThrown);
+  }
+
+  @isTest
   static void testReloadGenesysToSalesforcePresenceMapping() {
     // Set up initial test data
     Genesys_Cloud_Presence__c presence1 = new Genesys_Cloud_Presence__c(
@@ -343,7 +385,23 @@ public class GenesysCloudPresenceSyncServiceTest {
       'Expected result from reloadGenesysToSalesforcePresenceMapping'
     );
   }
-
+  @isTest
+  static void testReloadGenesysToSalesforcePresenceMappingWithException() {
+    GenesysCloudPresenceSyncService.setDataAccessService(
+      new MockDataAccessService(false)
+    );
+    Boolean exceptionThrown = false;
+    // Call the reload method
+    Test.startTest();
+    try {
+      List<Genesys_To_Salesforce_Presence_Mapping__c> result = GenesysCloudPresenceSyncService.reloadGenesysToSalesforcePresenceMapping();
+    } catch (Exception ex) {
+      exceptionThrown = true;
+    }
+    Test.stopTest();
+    // Verify that the mapping is reloaded correctly
+    System.assertEquals(true, exceptionThrown);
+  }
   @isTest
   static void testDeleteAllGenesysToSalesforcePresenceMapping() {
     // Set up initial test data
@@ -404,5 +462,24 @@ public class GenesysCloudPresenceSyncServiceTest {
     Test.stopTest();
     // Verify that the records were deleted
     System.assertEquals(0, result);
+  }
+
+  @isTest
+  static void testDeleteAllGenesysToSalesforcePresenceMappingWithException() {
+    // Call the reload method
+    GenesysCloudPresenceSyncService.setDataAccessService(
+      new MockDataAccessService(false)
+    );
+    Boolean exceptionThrown = false;
+    // Call the reload method
+    Test.startTest();
+    try {
+      Integer result = GenesysCloudPresenceSyncService.deleteAllGenesysToSalesforcePresenceMapping();
+    } catch (Exception ex) {
+      exceptionThrown = true;
+    }
+    Test.stopTest();
+    // Verify that the records were deleted
+    System.assertEquals(true, exceptionThrown);
   }
 }
