@@ -10,14 +10,16 @@
     </types>
 
     <types>
-        <members>GenesysCloudService</members>
-        <members>GenesysCloudServiceTest</members>
-        <members>GenesysCloudPresenceSyncService</members>
-        <members>GenesysCloudPresenceSyncServiceTest</members>
-        <members>ServiceCloudPresenceSyncService</members>
+        <members>GenesysCloudExceptionUtils</members>
+        <members>GenesysCloudMockHttpResponseGenerator</members>
         <members>GenesysCloudPresenceSyncExtension</members>
         <members>GenesysCloudPresenceSyncExtensionTest</members>
-        <members>GenesysCloudMockHttpResponseGenerator</members>
+        <members>GenesysCloudPresenceSyncService</members>
+        <members>GenesysCloudPresenceSyncServiceTest</members>
+        <members>GenesysCloudService</members>
+        <members>GenesysCloudServiceTest</members>
+        <members>ServiceCloudPresenceSyncService</members>
+        <members>ServiceCloudPresenceSyncServiceTest</members>
         <name>ApexClass</name>
     </types>
 
